@@ -76,6 +76,12 @@ ROUND_MAPPING = {
     '并购': '并购',
 }
 
+# 汇率配置（目标货币：人民币）
+EXCHANGE_RATES = {
+    'USD': 7.2,
+    'EUR': 7.8,
+}
+
 # 分析配置
 ANALYSIS_CONFIG = {
     'top_n_sectors': 15,  # 显示前N个热门赛道

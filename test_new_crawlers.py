@@ -14,7 +14,7 @@ def test_crawlers():
     """测试所有爬虫"""
     print("=" * 60)
     print("测试新的多站点爬虫")
-    print("数据源: Paul Graham, Hacker News, Product Hunt, IT桔子")
+    print("数据源: Paul Graham, Hacker News, Sam Altman, Fred Wilson, Benedict Evans")
     print("=" * 60)
     
     multi_crawler = MultiCrawler()

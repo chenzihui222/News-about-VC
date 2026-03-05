@@ -11,8 +11,6 @@ from typing import List, Dict, Any
 
 import pandas as pd
 
-import sys
-sys.path.append('..')
 from config.settings import REPORTS_DIR, DATA_DIR
 
 logging.basicConfig(level=logging.INFO)

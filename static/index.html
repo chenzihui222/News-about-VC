@@ -3,148 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VC Tracker - 投资热度追踪</title>
+    <title>VC Radar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-base: #f5f6f8;
+            --bg-card: #ffffff;
+            --bg-elevated: #f0f1f4;
+            --border: #e0e3e8;
+            --border-hover: #c5cad3;
+            --text-primary: #1a1e2c;
+            --text-secondary: #5a6377;
+            --text-muted: #929bb0;
+            --accent: #f38020;
+            --accent-glow: rgba(243, 128, 32, 0.1);
+            --green: #059669;
+            --blue: #2563eb;
+            --source-pg: #059669;
+            --source-hn: #ea580c;
+            --source-sa: #7c3aed;
+            --source-fw: #db2777;
+            --source-be: #2563eb;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: 150ms ease;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Bricolage Grotesque', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
-        .container {
-            max-width: 1200px;
+
+        .accent-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--accent);
+            z-index: 9999;
+        }
+
+        .app {
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+            padding: 26px 32px 32px;
         }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            text-align: center;
-        }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .controls {
-            padding: 20px;
-            background: #f8f9fa;
+
+        .nav {
             display: flex;
-            gap: 15px;
-            justify-content: center;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0 24px;
+            gap: 16px;
             flex-wrap: wrap;
         }
-        input, select {
-            padding: 12px 20px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            min-width: 200px;
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .table-container {
-            padding: 20px;
-            max-height: 600px;
-            overflow-y: auto;
+
+        .nav-logo {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+            animation: pulse 3s ease-in-out infinite;
         }
-        table { width: 100%; border-collapse: collapse; }
-        th {
-            background: #495057;
-            color: white;
-            padding: 15px;
-            text-align: left;
-            position: sticky;
-            top: 0;
+
+        .nav-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
+
+        .nav-version {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
         }
-        tr:hover { background: #f8f9fa; }
-        .source-tag {
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-select, .nav-input {
+            font-family: inherit;
+            font-size: 0.82rem;
+            padding: 7px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color var(--transition);
+        }
+        .nav-select:focus, .nav-input:focus { border-color: var(--accent); }
+        .nav-select option { background: #fff; color: var(--text-primary); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px 16px;
+            text-align: center;
+            transition: all var(--transition);
+            opacity: 0;
+            transform: translateY(8px);
+            animation: fadeUp 0.4s ease forwards;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .stat-card:nth-child(1) { animation-delay: 0.04s; }
+        .stat-card:nth-child(2) { animation-delay: 0.08s; }
+        .stat-card:nth-child(3) { animation-delay: 0.12s; }
+        .stat-card:nth-child(4) { animation-delay: 0.16s; }
+        .stat-card:nth-child(5) { animation-delay: 0.20s; }
+        .stat-card:nth-child(6) { animation-delay: 0.24s; }
+        .stat-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .stat-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
             display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
         }
-        .source-PaulGraham { background: #e8f5e9; color: #2e7d32; }
-        .source-HackerNews { background: #fff3e0; color: #ef6c00; }
-        a { color: #667eea; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .loading { text-align: center; padding: 60px; color: #666; }
+
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        thead { position: sticky; top: 0; z-index: 10; }
+
+        th {
+            background: var(--bg-elevated);
+            padding: 11px 16px;
+            text-align: left;
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr { transition: background var(--transition); }
+        tbody tr:hover { background: var(--bg-elevated); }
+        tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+        .cell-source { white-space: nowrap; }
+        .source-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .source-name { font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); }
+
+        .title-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 450;
+            transition: color var(--transition);
+        }
+        .title-link:hover { color: var(--accent); }
+
+        .cell-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .loading-msg {
+            text-align: center;
+            padding: 72px 20px;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+        }
+
+        .footer {
+            padding: 20px 0;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 12px var(--accent-glow); }
+            50% { box-shadow: 0 0 20px rgba(243, 128, 32, 0.3); }
+        }
+
+        @media (max-width: 768px) {
+            .app { padding: 18px 16px; }
+            .nav { flex-direction: column; align-items: flex-start; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-value { font-size: 1.3rem; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>VC Tracker</h1>
-            <p>VC投资热度追踪器 | Hacker News & Paul Graham</p>
+    <div class="accent-bar"></div>
+
+    <div class="app">
+        <nav class="nav">
+            <div class="nav-brand">
+                <span class="nav-logo"></span>
+                <span class="nav-title">VC Radar</span>
+                <span class="nav-version">static</span>
+            </div>
+            <div class="nav-controls">
+                <select class="nav-select" id="source-filter" onchange="filterData()">
+                    <option value="all">全部来源</option>
+                    <option value="Paul Graham">Paul Graham</option>
+                    <option value="Hacker News">Hacker News</option>
+                    <option value="Sam Altman">Sam Altman</option>
+                    <option value="Fred Wilson">Fred Wilson</option>
+                    <option value="Benedict Evans">Benedict Evans</option>
+                </select>
+                <input class="nav-input" type="text" id="search" placeholder="搜索标题..." onkeyup="filterData()">
+            </div>
+        </nav>
+
+        <div class="stats-grid" id="statsGrid" style="display:none">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">总计</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pgCount">0</div>
+                <div class="stat-label"><span class="stat-dot" style="background:var(--source-pg)"></span>Paul Graham</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="hnCount">0</div>
+                <div class="stat-label"><span class="stat-dot" style="background:var(--source-hn)"></span>Hacker News</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="saCount">0</div>
+                <div class="stat-label"><span class="stat-dot" style="background:var(--source-sa)"></span>Sam Altman</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="fwCount">0</div>
+                <div class="stat-label"><span class="stat-dot" style="background:var(--source-fw)"></span>Fred Wilson</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="beCount">0</div>
+                <div class="stat-label"><span class="stat-dot" style="background:var(--source-be)"></span>Benedict Evans</div>
+            </div>
         </div>
-        
-        <div class="controls">
-            <select id="source-filter" onchange="filterData()">
-                <option value="all">全部来源</option>
-                <option value="Paul Graham">Paul Graham</option>
-                <option value="Hacker News">Hacker News</option>
-            </select>
-            <input type="text" id="search" placeholder="搜索标题..." onkeyup="filterData()">
+
+        <div class="table-card">
+            <div id="loading" class="loading-msg">加载中...</div>
+            <div class="table-wrapper" id="tableWrap" style="display:none">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>来源</th>
+                            <th>标题</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
         </div>
-        
-        <div class="table-container">
-            <div id="loading" class="loading">加载中...</div>
-            <table id="news-table" style="display:none;">
-                <thead>
-                    <tr>
-                        <th>来源</th>
-                        <th>标题</th>
-                        <th>时间</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body"></tbody>
-            </table>
-        </div>
+
+        <footer class="footer">
+            Product By Chen Zihui
+        </footer>
     </div>
 
     <script>
         let allData = [];
-        
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function sanitizeUrl(url) {
+            if (!url) return '#';
+            try {
+                const parsed = new URL(url, window.location.origin);
+                if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return url;
+            } catch(e) {}
+            return '#';
+        }
+
+        function getSourceDotColor(source) {
+            if (!source) return 'var(--accent)';
+            if (source.includes('Paul')) return 'var(--source-pg)';
+            if (source.includes('Hacker')) return 'var(--source-hn)';
+            if (source.includes('Sam') || source.includes('Altman')) return 'var(--source-sa)';
+            if (source.includes('Fred') || source.includes('Wilson')) return 'var(--source-fw)';
+            if (source.includes('Benedict') || source.includes('Evans')) return 'var(--source-be)';
+            return 'var(--accent)';
+        }
+
         async function loadData() {
             try {
                 const response = await fetch('data.json');
                 allData = await response.json();
-                filterData();
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('news-table').style.display = 'table';
+                document.getElementById('tableWrap').style.display = 'block';
+                document.getElementById('statsGrid').style.display = 'grid';
+                updateStats();
+                filterData();
             } catch (e) {
-                document.getElementById('loading').innerHTML = '加载失败，请刷新重试';
+                document.getElementById('loading').textContent = '加载失败，请刷新重试';
             }
         }
-        
+
+        function updateStats() {
+            const counts = { 'Paul Graham': 0, 'Hacker News': 0, 'Sam Altman': 0, 'Fred Wilson': 0, 'Benedict Evans': 0 };
+            allData.forEach(function(item) {
+                if (counts.hasOwnProperty(item.source)) counts[item.source]++;
+            });
+            document.getElementById('totalCount').textContent = allData.length;
+            document.getElementById('pgCount').textContent = counts['Paul Graham'];
+            document.getElementById('hnCount').textContent = counts['Hacker News'];
+            document.getElementById('saCount').textContent = counts['Sam Altman'];
+            document.getElementById('fwCount').textContent = counts['Fred Wilson'];
+            document.getElementById('beCount').textContent = counts['Benedict Evans'];
+        }
+
         function filterData() {
             const source = document.getElementById('source-filter').value;
             const search = document.getElementById('search').value.toLowerCase();
-            
             let filtered = allData;
             if (source !== 'all') {
-                filtered = filtered.filter(item => item.source === source);
+                filtered = filtered.filter(function(item) { return item.source === source; });
             }
             if (search) {
-                filtered = filtered.filter(item => 
-                    item.title.toLowerCase().includes(search)
-                );
+                filtered = filtered.filter(function(item) {
+                    return item.title.toLowerCase().includes(search);
+                });
             }
-            
+
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = filtered.map(item => `
-                <tr>
-                    <td><span class="source-tag source-${item.source.replace(/\s/g, '')}">${item.source}</span></td>
-                    <td><a href="${item.url}" target="_blank">${item.title}</a></td>
-                    <td>${item.publish_time ? item.publish_time.slice(0, 10) : ''}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = filtered.map(function(item) {
+                const dotColor = getSourceDotColor(item.source);
+                const timeStr = item.publish_time ? escapeHtml(item.publish_time.slice(0, 10)) : '';
+                return '<tr>' +
+                    '<td class="cell-source"><span class="source-dot" style="background:' + dotColor + '"></span><span class="source-name">' + escapeHtml(item.source) + '</span></td>' +
+                    '<td><a href="' + sanitizeUrl(item.url) + '" target="_blank" rel="noopener noreferrer" class="title-link">' + escapeHtml(item.title) + '</a></td>' +
+                    '<td class="cell-time">' + timeStr + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            document.getElementById('totalCount').textContent = filtered.length;
         }
-        
+
         loadData();
     </script>
 </body>

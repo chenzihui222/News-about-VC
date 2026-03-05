@@ -18,25 +18,33 @@ jobs:
         with:
           python-version: '3.11'
       
+      - name: Debug directory
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          ls -la
+          echo "=== Looking for project ==="
+          find . -name "main.py" -o -name "multi_crawler.py" 2>/dev/null | head -5
+      
       - name: Install dependencies
         run: pip install requests beautifulsoup4 lxml
       
-      - name: Debug and crawl
+      - name: Crawl data
         run: |
-          echo "Current directory: $(pwd)"
-          echo "Looking for project..."
-          ls -la
+          # 查找项目目录
+          PROJECT_DIR=$(find . -type d -name "News*VC" | head -1)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: Cannot find project directory"
+            exit 1
+          fi
+          echo "Found project at: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
           
-          # 进入项目目录
-          cd "News about VC"
-          pwd
-          ls -la
-          
-          # 确保Python包结构正确
+          # 创建init文件
           touch vc_tracker/__init__.py
           
           # 运行爬虫
-          python3 <> 'PYEOF'
+          python3 << 'PYEOF'
 import sys
 import os
 sys.path.insert(0, os.getcwd())
@@ -49,7 +57,6 @@ mc = MultiCrawler()
 mc.crawl_selected(["hackernews", "paulgraham"], max_items_per_site=20)
 mc.save_data()
 
-# 复制到static目录
 os.makedirs("static", exist_ok=True)
 shutil.copy("data/multi_source_news.json", "static/data.json")
 
@@ -58,7 +65,9 @@ PYEOF
       
       - name: Commit changes
         run: |
-          cd "News about VC"
+          PROJECT_DIR=$(find . -type d -name "News*VC" | head -1)
+          cd "$PROJECT_DIR"
+          
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           git add data/ static/
@@ -78,9 +87,22 @@ PYEOF
       
       - name: Prepare site
         run: |
+          PROJECT_DIR=$(find . -type d -name "News*VC" | head -1)
           mkdir -p docs
-          cp "News about VC/static/index.html" docs/ 2>/dev/null || echo "<h1>VC Tracker</h1>" > docs/index.html
-          cp "News about VC/static/data.json" docs/ 2>/dev/null || echo "[]" > docs/data.json
+          
+          if [ -f "$PROJECT_DIR/static/index.html" ]; then
+            cp "$PROJECT_DIR/static/index.html" docs/
+          else
+            echo "<!DOCTYPE html><html><head><title>VC Tracker</title></head><body><h1>VC Tracker</h1><p>Loading...</p></body></html>" > docs/index.html
+          fi
+          
+          if [ -f "$PROJECT_DIR/static/data.json" ]; then
+            cp "$PROJECT_DIR/static/data.json" docs/
+          else
+            echo "[]" > docs/data.json
+          fi
+          
+          echo "Site prepared"
       
       - uses: actions/upload-pages-artifact@v3
         with:

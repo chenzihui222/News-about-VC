@@ -1,0 +1,49 @@
+name: VC Tracker Deploy
+'on':
+  schedule:
+  - cron: 0 2,14 * * *
+  workflow_dispatch: {}
+  push:
+    branches:
+    - main
+    - master
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install deps
+      run: pip install requests beautifulsoup4 lxml
+    - name: Crawl
+      run: cd "News about VC" && python -c "from vc_tracker.multi_crawler import MultiCrawler;
+        mc=MultiCrawler(); mc.crawl_all(max_items_per_site=30); mc.save_data(); import
+        os, shutil; os.makedirs("static", exist_ok=True); shutil.copy("data/multi_source_news.json",
+        "static/data.json")"
+    - name: Commit
+      run: git config user.email "action@github.com" && git config user.name "GitHub
+        Action" && git add "News about VC/data/" "News about VC/static/" && git commit
+        -m "Update data" || echo "No changes" && git push || echo "No push"
+  deploy:
+    needs: crawl
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/configure-pages@v4
+    - name: Prepare
+      run: mkdir -p docs && cp "News about VC/static/index.html" docs/ && cp "News
+        about VC/static/data.json" docs/
+    - uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs
+    - id: deployment
+      uses: actions/deploy-pages@v4

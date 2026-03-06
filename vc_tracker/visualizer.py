@@ -18,15 +18,29 @@ from plotly.subplots import make_subplots
 from wordcloud import WordCloud
 import jieba
 
-import sys
-sys.path.append('..')
 from config.settings import CHARTS_DIR, REPORTS_DIR, CHART_CONFIG, ANALYSIS_CONFIG
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans', 'Arial Unicode MS']
+
+def _get_chinese_font():
+    """按优先级检测可用的中文字体，最终回退到 DejaVu Sans"""
+    from matplotlib.font_manager import fontManager
+    available = {f.name for f in fontManager.ttflist}
+    candidates = [
+        'SimHei', 'Heiti SC', 'STHeiti', 'Microsoft YaHei',
+        'WenQuanYi Micro Hei', 'Noto Sans CJK SC',
+    ]
+    for font in candidates:
+        if font in available:
+            logger.info(f"使用中文字体: {font}")
+            return [font, 'DejaVu Sans']
+    logger.warning("未找到中文字体，回退到 DejaVu Sans")
+    return ['DejaVu Sans']
+
+
+plt.rcParams['font.sans-serif'] = _get_chinese_font()
 plt.rcParams['axes.unicode_minus'] = False
 
 

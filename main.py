@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 VC投资热度追踪器 - 主程序入口
-支持多站点：Paul Graham, Hacker News, Product Hunt, IT桔子
+支持多站点：Paul Graham, Hacker News, Sam Altman, Fred Wilson, Benedict Evans
 """
 
 import os
@@ -64,26 +64,29 @@ def crawl_multi_command(args):
     
     # 解析要抓取的站点
     sources = []
+    all_sources = ['paulgraham', 'hackernews', 'samaltman', 'fredwilson', 'benedictevans']
     if args.all:
-        sources = ['paulgraham', 'hackernews', 'producthunt', 'itjuzi']
+        sources = list(all_sources)
     else:
         if args.pg:
             sources.append('paulgraham')
         if args.hn:
             sources.append('hackernews')
-        if args.ph:
-            sources.append('producthunt')
-        if args.ij:
-            sources.append('itjuzi')
-    
+        if args.sa:
+            sources.append('samaltman')
+        if args.fw:
+            sources.append('fredwilson')
+        if args.be:
+            sources.append('benedictevans')
+
     if not sources:
         logger.warning("未选择任何数据源，默认抓取所有")
-        sources = ['paulgraham', 'hackernews', 'producthunt', 'itjuzi']
-    
+        sources = list(all_sources)
+
     print(f"\n将抓取以下数据源: {', '.join(sources)}")
-    
+
     # 执行抓取
-    if len(sources) == 4:
+    if len(sources) == len(all_sources):
         news_items = multi_crawler.crawl_all(max_items_per_site=args.max_items)
     else:
         news_items = multi_crawler.crawl_selected(sources, max_items_per_site=args.max_items)
@@ -153,22 +156,25 @@ def refresh_command(args):
     multi_crawler = MultiCrawler()
     
     # 解析要刷新的站点
+    all_sources = ['paulgraham', 'hackernews', 'samaltman', 'fredwilson', 'benedictevans']
     sources = []
     if args.all:
-        sources = ['paulgraham', 'hackernews', 'producthunt', 'itjuzi']
+        sources = list(all_sources)
     else:
-        if args.pg or not any([args.hn, args.ph, args.ij]):
+        if args.pg or not any([args.hn, args.sa, args.fw, args.be]):
             sources.append('paulgraham')
         if args.hn:
             sources.append('hackernews')
-        if args.ph:
-            sources.append('producthunt')
-        if args.ij:
-            sources.append('itjuzi')
-    
+        if args.sa:
+            sources.append('samaltman')
+        if args.fw:
+            sources.append('fredwilson')
+        if args.be:
+            sources.append('benedictevans')
+
     print(f"\n正在刷新数据源: {', '.join(sources)}")
-    
-    if len(sources) == 4:
+
+    if len(sources) == len(all_sources):
         news_items = multi_crawler.refresh(max_items_per_site=args.max_items)
     else:
         news_items = multi_crawler.crawl_selected(sources, max_items_per_site=args.max_items)
@@ -338,7 +344,7 @@ def multi_all_command(args):
     # 1. 抓取所有站点
     print("\n【步骤1/3】抓取多站点数据...")
     refresh_args = argparse.Namespace(
-        all=True, pg=False, hn=False, ph=False, ij=False,
+        all=True, pg=False, hn=False, sa=False, fw=False, be=False,
         max_items=args.max_items
     )
     refresh_command(refresh_args)
@@ -401,8 +407,8 @@ def main():
   python main.py report --format html         # 生成HTML报告
   python main.py all --pages 10               # 执行完整流程
   
-  # 多站点命令 (新增4个数据源)
-  python main.py multi-crawl --all            # 抓取所有4个站点
+  # 多站点命令 (5个数据源)
+  python main.py multi-crawl --all            # 抓取所有5个站点
   python main.py multi-crawl --pg --hn        # 抓取Paul Graham和HN
   python main.py list                         # 列出所有标题
   python main.py list --refresh               # 刷新并列出标题
@@ -448,8 +454,9 @@ def main():
     multi_crawl_parser.add_argument('--all', '-a', action='store_true', help='抓取所有站点')
     multi_crawl_parser.add_argument('--pg', action='store_true', help='抓取Paul Graham文章')
     multi_crawl_parser.add_argument('--hn', action='store_true', help='抓取Hacker News')
-    multi_crawl_parser.add_argument('--ph', action='store_true', help='抓取Product Hunt')
-    multi_crawl_parser.add_argument('--ij', action='store_true', help='抓取IT桔子')
+    multi_crawl_parser.add_argument('--sa', action='store_true', help='抓取Sam Altman博客')
+    multi_crawl_parser.add_argument('--fw', action='store_true', help='抓取Fred Wilson (AVC)')
+    multi_crawl_parser.add_argument('--be', action='store_true', help='抓取Benedict Evans')
     multi_crawl_parser.add_argument('--max-items', '-m', type=int, default=30, help='每站点最大条目数')
     multi_crawl_parser.add_argument('--verbose', '-v', action='store_true', help='显示详细信息')
     multi_crawl_parser.set_defaults(func=crawl_multi_command)
@@ -458,7 +465,7 @@ def main():
     list_parser = subparsers.add_parser('list', help='列出所有新闻标题')
     list_parser.add_argument('--refresh', '-r', action='store_true', help='刷新数据后列出')
     list_parser.add_argument('--limit', '-l', type=int, default=50, help='显示条数限制')
-    list_parser.add_argument('--source', '-s', type=str, help='按数据源过滤 (paulgraham/hackernews/producthunt/itjuzi)')
+    list_parser.add_argument('--source', '-s', type=str, help='按数据源过滤 (paulgraham/hackernews/samaltman/fredwilson/benedictevans)')
     list_parser.set_defaults(func=list_command)
     
     # refresh 命令
@@ -466,8 +473,9 @@ def main():
     refresh_parser.add_argument('--all', '-a', action='store_true', help='刷新所有站点')
     refresh_parser.add_argument('--pg', action='store_true', help='刷新Paul Graham')
     refresh_parser.add_argument('--hn', action='store_true', help='刷新Hacker News')
-    refresh_parser.add_argument('--ph', action='store_true', help='刷新Product Hunt')
-    refresh_parser.add_argument('--ij', action='store_true', help='刷新IT桔子')
+    refresh_parser.add_argument('--sa', action='store_true', help='刷新Sam Altman博客')
+    refresh_parser.add_argument('--fw', action='store_true', help='刷新Fred Wilson (AVC)')
+    refresh_parser.add_argument('--be', action='store_true', help='刷新Benedict Evans')
     refresh_parser.add_argument('--max-items', '-m', type=int, default=30)
     refresh_parser.set_defaults(func=refresh_command)
     

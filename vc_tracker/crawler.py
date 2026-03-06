@@ -17,8 +17,6 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-import sys
-sys.path.append('..')
 from config.settings import KR36_CONFIG, SECTOR_KEYWORDS, ROUND_MAPPING, DATA_DIR
 
 # 配置日志
@@ -284,7 +282,7 @@ class Kr36Crawler:
                 try:
                     dt = datetime.strptime(time_str, fmt)
                     return dt.isoformat()
-                except:
+                except (ValueError, TypeError):
                     continue
             
             # 如果是时间戳

@@ -79,7 +79,7 @@ class NewsTableWindow:
         self.source_combo = ttk.Combobox(
             filter_frame,
             textvariable=self.source_var,
-            values=["全部", "36kr", "a16z", "Y Combinator", "Hacker News"],
+            values=["全部", "Paul Graham", "Hacker News", "Sam Altman", "Fred Wilson", "Benedict Evans"],
             state="readonly",
             width=15
         )
@@ -208,7 +208,7 @@ class NewsTableWindow:
             # 格式化时间
             try:
                 pub_time = datetime.fromisoformat(item.publish_time).strftime("%m-%d %H:%M")
-            except:
+            except (ValueError, TypeError):
                 pub_time = "未知"
             
             self.tree.insert(

@@ -13,9 +13,7 @@ from typing import List, Dict, Tuple
 import pandas as pd
 import numpy as np
 
-import sys
-sys.path.append('..')
-from config.settings import DATA_DIR, ANALYSIS_CONFIG, SECTOR_KEYWORDS
+from config.settings import DATA_DIR, ANALYSIS_CONFIG, SECTOR_KEYWORDS, EXCHANGE_RATES
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -139,11 +137,9 @@ class FundingAnalyzer:
         
         # 判断货币单位
         if '美元' in amount_str or '美金' in amount_str or '$' in amount_str:
-            # 美元转换为人民币（假设汇率7.2）
-            value *= 7.2
+            value *= EXCHANGE_RATES.get('USD', 7.2)
         elif '欧元' in amount_str or '€' in amount_str:
-            # 欧元转换为人民币（假设汇率7.8）
-            value *= 7.8
+            value *= EXCHANGE_RATES.get('EUR', 7.8)
         
         # 转换单位
         if unit == '万':

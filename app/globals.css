@@ -621,13 +621,102 @@ tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     font-size: 0.88rem;
 }
 
-.footer {
-    padding: 20px 0;
-    margin-top: 20px;
-    text-align: center;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
+/* ========== Footer ========== */
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.8);
+  margin-top: 20px;
+}
+
+.footer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 36px 32px 28px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 28px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.footer-brand-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.footer-brand-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.footer-brand-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.footer-heading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.footer-link {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 150ms;
+}
+
+.footer-link:hover { color: var(--accent); }
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-copy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.footer-social {
+  color: var(--text-muted);
+  transition: color 150ms;
+}
+
+.footer-social:hover { color: var(--accent); }
+
+@media (max-width: 640px) {
+  .footer-grid { grid-template-columns: 1fr; gap: 20px; }
+  .footer-inner { padding: 28px 16px 20px; }
+  .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
 }
 
 @keyframes fadeUp {

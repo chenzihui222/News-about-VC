@@ -612,11 +612,17 @@
         }
         .title-link:hover { color: var(--accent); }
 
-        .cell-time {
-            font-family: 'JetBrains Mono', monospace;
+        .cell-summary {
             font-size: 0.78rem;
-            color: var(--text-muted);
-            white-space: nowrap;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            line-height: 1.5;
+            max-width: 100%;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .cell-keywords {
@@ -812,6 +818,134 @@
     <script>
         let allData = [];
         let currentDisplayData = [];
+
+        // 加载数据
+        async function loadData() {
+            try {
+                const response = await fetch('data.json?t=' + new Date().getTime());
+                allData = await response.json();
+                currentDisplayData = [...allData];
+                
+                updateStats();
+                filterData();
+                updateLastUpdateTime();
+                checkForNewArticles();
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                document.getElementById('loading').textContent = '加载失败，请刷新页面重试';
+            }
+        }
+
+        // 过滤数据
+        function filterData() {
+            const sourceFilter = document.getElementById('source-filter').value;
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            
+            currentDisplayData = allData.filter(item => {
+                const matchSource = sourceFilter === 'all' || item.source === sourceFilter;
+                const matchSearch = !searchTerm || item.title.toLowerCase().includes(searchTerm);
+                return matchSource && matchSearch;
+            });
+            
+            renderTable();
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const loading = document.getElementById('loading');
+            const tableWrap = document.getElementById('tableWrap');
+            
+            if (currentDisplayData.length === 0) {
+                loading.textContent = '暂无数据';
+                loading.style.display = 'block';
+                tableWrap.style.display = 'none';
+                return;
+            }
+            
+            loading.style.display = 'none';
+            tableWrap.style.display = 'block';
+            
+            tbody.innerHTML = currentDisplayData.map(item => {
+                const dotColor = getSourceDotColor(item.source);
+                const keywords = item.sector || '';
+                const summary = item.summary || '';
+                
+                return `<tr>
+                    <td class="cell-source">
+                        <span class="source-dot" style="background:${dotColor}"></span>
+                        <span class="source-name">${escapeHtml(item.source)}</span>
+                    </td>
+                    <td>
+                        <a href="${sanitizeUrl(item.url)}" target="_blank" class="title-link">${escapeHtml(item.title)}</a>
+                        ${summary ? `<div class="cell-summary">${escapeHtml(summary)}</div>` : ''}
+                    </td>
+                    <td class="cell-keywords">${escapeHtml(keywords)}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // 获取来源颜色
+        function getSourceDotColor(source) {
+            const colors = {
+                'Paul Graham': 'var(--source-pg)',
+                'Hacker News': 'var(--source-hn)',
+                'Sam Altman': 'var(--source-sa)',
+                'Fred Wilson': 'var(--source-fw)',
+                'Benedict Evans': 'var(--source-be)'
+            };
+            return colors[source] || '#999';
+        }
+
+        // 格式化时间 - 显示日期
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const date = new Date(timeStr);
+            // 格式化为 YYYY-MM-DD
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 转义HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 清理URL
+        function sanitizeUrl(url) {
+            if (!url) return '#';
+            return url.replace(/"/g, '%22').replace(/'/g, '%27');
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allData.length;
+            document.getElementById('dbCount').textContent = allData.length;
+            document.getElementById('statsGrid').style.display = 'grid';
+            document.getElementById('infoBar').style.display = 'flex';
+            
+            const counts = {};
+            allData.forEach(item => {
+                counts[item.source] = (counts[item.source] || 0) + 1;
+            });
+            
+            document.getElementById('pgCount').textContent = counts['Paul Graham'] || 0;
+            document.getElementById('hnCount').textContent = counts['Hacker News'] || 0;
+            document.getElementById('saCount').textContent = counts['Sam Altman'] || 0;
+            document.getElementById('fwCount').textContent = counts['Fred Wilson'] || 0;
+            document.getElementById('beCount').textContent = counts['Benedict Evans'] || 0;
+        }
+
+        // 更新时间
+        function updateLastUpdateTime() {
+            const el = document.getElementById('lastUpdateTime');
+            if (el) el.textContent = new Date().toLocaleString('zh-CN');
+        }
 
         async function refreshData() {
             const btn = document.getElementById('refreshBtn');
@@ -1009,24 +1143,15 @@
             modal.classList.remove('active');
             document.body.style.overflow = ''; // 恢复背景滚动
             
-            // 标记用户已看过欢迎弹窗
-            try {
-                localStorage.setItem(WELCOME_KEY, 'true');
-            } catch (e) {
-                console.error('保存欢迎弹窗状态失败:', e);
-            }
+            // 不存储状态，这样下次访问仍会显示欢迎弹窗
             
             // 关闭后开始加载数据和检查更新
             loadData();
         }
 
-        // 检查是否需要显示欢迎弹窗
+        // 检查是否需要显示欢迎弹窗（每次访问都显示）
         function shouldShowWelcome() {
-            try {
-                return !localStorage.getItem(WELCOME_KEY);
-            } catch (e) {
-                return true;
-            }
+            return true;  // 始终返回 true，每次进入都显示弹窗
         }
 
         // 页面加载时处理欢迎弹窗

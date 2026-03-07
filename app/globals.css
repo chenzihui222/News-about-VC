@@ -614,6 +614,24 @@ tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     line-height: 1.5;
 }
 
+.keywords-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.keyword-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: rgba(243, 128, 32, 0.08);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
 .loading-msg {
     text-align: center;
     padding: 72px 20px;

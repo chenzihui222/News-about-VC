@@ -21,6 +21,69 @@ const SOURCES = [
 const STORAGE_KEY = "vc_radar_last_articles";
 const WELCOME_KEY = "vc_radar_welcome_shown";
 
+// 关键词提取函数
+function extractKeywords(title: string): string[] {
+  // 定义常见的技术/VC关键词
+  const keywordPatterns = [
+    // 技术领域
+    'AI', '人工智能', '机器学习', '深度学习', '神经网络', 'LLM', '大模型', 'ChatGPT',
+    '区块链', 'Web3', '加密货币', 'Bitcoin', '以太坊', 'NFT',
+    '云计算', '云原生', '容器', 'Docker', 'Kubernetes', 'K8s',
+    '前端', '后端', '全栈', 'React', 'Vue', 'Angular', 'Node.js',
+    'Python', 'JavaScript', 'TypeScript', 'Go', 'Rust', 'Java',
+    '数据库', 'SQL', 'NoSQL', 'Redis', 'MongoDB', 'PostgreSQL',
+    'DevOps', 'CI/CD', 'GitHub', 'GitLab', 'Jenkins',
+    '微服务', 'Serverless', 'FaaS', 'Lambda',
+    '安全', '网络安全', '加密', '隐私', '零信任',
+    '物联网', 'IoT', '边缘计算', '5G', '6G',
+    '大数据', '数据科学', '数据分析', '数据挖掘', 'BI',
+    'AR', 'VR', 'MR', '元宇宙', 'Metaverse',
+    '自动驾驶', '无人驾驶', '电动汽车', 'EV', 'Tesla',
+    '生物科技', '基因', '医疗', '健康科技', 'HealthTech',
+    '金融科技', 'FinTech', '支付', '数字银行', 'DeFi',
+    '电商', '零售', '新零售', 'DTC', '品牌',
+    'SaaS', 'PaaS', 'IaaS', '低代码', '无代码', 'No-code',
+    '开源', 'Open Source', 'GitHub',
+    // VC/创业相关
+    '初创', '创业', 'Startup', '独角兽', '融资', '投资', 'VC', '风投',
+    '天使投资', '种子轮', 'A轮', 'B轮', 'C轮', 'IPO', '上市',
+    '估值', '股权', '期权', '并购', 'M&A', '收购', '合并',
+    '增长', '增长黑客', 'Growth', 'PMF', '产品市场匹配',
+    '商业模式', '盈利', '收入', '营收', '变现', 'Monetization',
+    '市场', '营销', '品牌', '用户', '客户', '获客', '留存', '转化',
+    '团队', '招聘', '人才', '管理', '领导力', '企业文化',
+    '战略', '战术', '规划', '路线图', 'Roadmap',
+    '创新', '颠覆', '变革', '转型', '数字化',
+    '趋势', '预测', '展望', '未来', 'Next', '下一代',
+    // 知名公司/产品
+    'OpenAI', 'Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Facebook',
+    'Tesla', 'SpaceX', 'Twitter', 'X', 'LinkedIn', 'Netflix', 'Spotify',
+    'Uber', 'Airbnb', 'Stripe', 'Notion', 'Figma', 'Slack', 'Discord',
+    'YC', 'Y Combinator', '红杉', 'Sequoia', 'a16z', 'Andreessen Horowitz',
+    // 通用商业
+    '产品', 'Product', '设计', 'Design', '用户体验', 'UX', 'UI',
+    '工程', 'Engineering', '技术', 'Tech', '研发', 'R&D',
+    '运营', 'Operation', '销售', 'Sales', '客服', 'Support',
+    '敏捷', 'Agile', 'Scrum', '精益', 'Lean', 'MVP',
+    'API', 'SDK', '平台', 'Platform', '生态', 'Ecosystem',
+    '社区', 'Community', '网络效应', 'Network Effect',
+    '规模', 'Scale', '扩张', '国际化', '全球化'
+  ];
+  
+  const keywords: string[] = [];
+  const lowerTitle = title.toLowerCase();
+  
+  for (const keyword of keywordPatterns) {
+    if (lowerTitle.includes(keyword.toLowerCase())) {
+      keywords.push(keyword);
+      if (keywords.length >= 2) break; // 最多取2个关键词
+    }
+  }
+  
+  // 如果没有匹配到关键词，返回空数组
+  return keywords;
+}
+
 function getSourceDotColor(source: string): string {
   if (source.includes("Paul")) return "var(--source-pg)";
   if (source.includes("Hacker")) return "var(--source-hn)";
@@ -226,7 +289,7 @@ export default function ClientApp({
                 <tr>
                   <th>来源</th>
                   <th>标题</th>
-                  <th style={{ width: "35%" }}>时间</th>
+                  <th style={{ width: "35%" }}>关键词</th>
                 </tr>
               </thead>
               <tbody>
@@ -251,8 +314,14 @@ export default function ClientApp({
                         {item.title}
                       </a>
                     </td>
-                    <td className="cell-time">
-                      {item.publish_time?.slice(0, 10) ?? ""}
+                    <td className="cell-keywords">
+                      <div className="keywords-container">
+                        {extractKeywords(item.title).map((keyword, idx) => (
+                          <span key={idx} className="keyword-tag">
+                            {keyword}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 ))}

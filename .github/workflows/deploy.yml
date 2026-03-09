@@ -17,9 +17,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npx vinext build
-
-      - run: npx wrangler deploy
+      - run: npx vinext deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
